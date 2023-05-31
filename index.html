@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dan Friedman Text</title>
+    <style>
+        @font-face {
+            font-family: 'Theinhardt Mono Regular Trial';
+            src: url('theinhardt-mono-regular-trial-webfont.woff');
+        }
+        body {
+            font-family: 'Theinhardt Mono Regular Trial', Courier, monospace;
+            font-size: 60pt;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        #container {
+            position: relative;
+            padding: 40px 5%;
+        }
+        #text, #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            outline: none;
+        }
+        #overlay {
+            color: transparent;
+            pointer-events: none;
+        }
+        .highlight {
+            color: yellow;
+            -webkit-text-stroke: 32px yellow;
+            position: relative;
+            top: -7px;
+            left: -7px;
+        }
+        .overlay-highlight {
+            color: red;
+        }
+    </style>
+    <script src="https://unpkg.com/compromise"></script>
+    <script>
+        window.onload = function() {
+            let textElement = document.getElementById("text");
+            let overlayElement = document.getElementById("overlay");
+            textElement.focus();
+            textElement.addEventListener("input", function() {
+                let text = this.innerText;
+                let doc = nlp(text);
+                let adjectives = doc.adjectives().out('array');
+                let output = text.split(' ').map(word => {
+                    if (adjectives.includes(word)) {
+                        return "<span class='highlight'>" + word + "</span>";
+                    } else {
+                        return word;
+                    }
+                }).join(' ');
+                let overlayOutput = text.split(' ').map(word => {
+                    if (adjectives.includes(word)) {
+                        return "<span class='overlay-highlight'>" + word + "</span>";
+                    } else {
+                        return word;
+                    }
+                }).join(' ');
+                this.innerHTML = output;
+                overlayElement.innerHTML = overlayOutput;
+                placeCaretAtEnd(this);
+            });
+        }
+        function placeCaretAtEnd(el) {
+            el.focus();
+            if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+                let range = document.createRange();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                let sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            } else if (typeof document.body.createTextRange != "undefined") {
+                let textRange = document.body.createTextRange();
+                textRange.moveToElementText(el);
+                textRange.collapse(false);
+                textRange.select();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="container">
+        <div id="text" contentEditable="true"></div>
+        <div id="overlay" contentEditable="false"></div>
+    </div>
+</body>
+</html>
